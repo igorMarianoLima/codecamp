@@ -2,6 +2,8 @@ import { AfterViewInit, Component, ElementRef, EventEmitter, Input, Output, View
 
 import { EditorView, basicSetup } from 'codemirror';
 import { javascriptLanguage } from '@codemirror/lang-javascript'
+import { oneDark } from '@codemirror/theme-one-dark'
+
 import { CodeLog, CodeLogger } from '../../classes/CodeLogger.class';
 
 @Component({
@@ -13,9 +15,7 @@ export class CodeEditorComponent implements AfterViewInit {
   @ViewChild('ideContainer')
   ideContainer!: ElementRef<HTMLDivElement>;
 
-  @ViewChild('console')
-  console!: ElementRef<HTMLDivElement>
-
+  @Input() identifier: string | number = 0;
   @Input() code = `console.log('Hello world')`
   @Input() expectedResult: any[] = [];
   @Input() tolerateMistakes: boolean = false;
@@ -38,6 +38,7 @@ export class CodeEditorComponent implements AfterViewInit {
       parent: this.ideContainer.nativeElement,
       extensions: [
         basicSetup,
+        oneDark,
         javascriptLanguage
       ],
       doc: this.code
@@ -48,28 +49,47 @@ export class CodeEditorComponent implements AfterViewInit {
     const code = this.editor.state.doc.toString();
 
     this.onCodeExecute.emit();
+    this.clearMemory();
 
     try {
       eval(code)
     } catch (err) {
       const error = err as Error;
-      console.error(error.message);
+      const message = `${error?.name ? error.name + ' - ' : ''} ${error.message}`
+      console.error(message);
     }
 
     this.debugOutput();
-    this.clearMemory();
+  }
+
+  saveCode() {
+    const id = this.identifier.toString();
+    const code = this.editor.state.doc;
+
+    localStorage.setItem(id, JSON.stringify(code));
   }
 
   debugOutput() {
     const codeLogs = this.logger.logs;
 
-    if (codeLogs.every(l => l.type === 'message') || this.tolerateMistakes) {
-      this.onSuccess.emit(codeLogs);
-    } else {
-      this.onError.emit(codeLogs);
+    if (!this.tolerateMistakes) {
+      if (codeLogs.some(log => log.type === 'error') || codeLogs.length !== this.expectedResult.length) {
+        this.debugError();
+        return;
+      }
+
+      if (codeLogs.some(registeredLog => !this.expectedResult.includes(registeredLog.value))) {
+        this.debugError();
+        return;
+      }
     }
 
-    this.console.nativeElement.innerText = this.logger.logs.map(l => l.value).join(', ')
+    this.onSuccess.emit(codeLogs);
+  }
+
+  debugError() {
+    const codeLogs = this.logger.logs;
+    this.onError.emit(codeLogs);
   }
 
   clearMemory() {
