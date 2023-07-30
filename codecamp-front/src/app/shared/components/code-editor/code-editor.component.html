@@ -1,7 +1,19 @@
-<div>
-  <section #ideContainer></section>
-  <section #console></section>
-</div>
-<div>
-  <button (click)="runCode()">Run</button>
+<div class="code-editor">
+  <header class="options">
+    <ul class="tools">
+      <button (click)="runCode()">Run</button>
+      <button (click)="saveCode()">Save</button>
+    </ul>
+  </header>
+  <div class="editor">
+    <section class="ide" #ideContainer></section>
+    <section class="console">
+      <p
+        *ngFor="let log of logger.logs"
+        [ngClass]="log.type === 'error' ? 'error' : ''"
+      >
+        {{ log.value }}
+      </p>
+    </section>
+  </div>
 </div>
