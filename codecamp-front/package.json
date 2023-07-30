@@ -19,6 +19,7 @@
     "@angular/platform-browser-dynamic": "^16.1.0",
     "@angular/router": "^16.1.0",
     "@codemirror/lang-javascript": "^6.1.9",
+    "@codemirror/theme-one-dark": "^6.1.2",
     "codemirror": "^6.0.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
