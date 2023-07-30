@@ -1,4 +1,4 @@
-interface CodeLog {
+export interface CodeLog {
     type: 'message' | 'error';
     value: any;
 }
